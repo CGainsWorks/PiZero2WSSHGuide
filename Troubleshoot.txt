@@ -1,0 +1,1 @@
+bullseye not working on pi zero but working on pi zero 2w, because Pi Zero can only do 32bit OS while Pi Zero 2 can do 64bit OS
