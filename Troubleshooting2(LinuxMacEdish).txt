@@ -1,0 +1,92 @@
+change cmdline.txt to (bootfs):
+console=serial0,115200 console=tty1 root=PARTUUID=f62c8f2a-02 rootfstype=ext4 fsck.repair=yes rootwait modules-load=dwc2,g_ether ip=192.168.2.2
+
+
+
+then on pi:
+sudo nano /etc/dhcpcd.conf
+
+add to the end:
+interface usb0
+static ip_address=192.168.2.2/24
+static routers=192.168.2.1
+static domain_name_servers=192.168.2.1
+
+verify it shows:
+ip addr show usb0 - make sure it shows inet 192.168.2.2/24
+ip route - Ensure there is a route for the 192.168.2.0/24 network on Pi and Mint "192.168.2.0/24 dev usb0 proto dhcp scope link src 192.168.2.2 metric 202"
+
+if in doubt, restart. Even if it works, restart/power off the pi once done the above steps.
+
+
+
+then on mint (how to connect to pi connected through USB to linux mint PC):
+arp -a (should show device as ? (192.168.2.2) -pi IP, if not do the following 3 steps)
+sudo ip addr add 192.168.2.1/24 dev usb0 (set mint IP)
+sudo ip link set usb0 up
+ssh pi@192.168.2.2
+
+if in doubt, restart. Even if it works, restart/power off the mint once done the above steps. 
+
+If connecting new Pi same IP and get the following:
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ED25519 key sent by the remote host is
+SHA256:R7M3E1mVjRHvRSq7WR/3lOH72Si2ToJoknFUyeFobsc.
+Please contact your system administrator.
+Add correct host key in /home/anon/.ssh/known_hosts to get rid of this message.
+Offending ECDSA key in /home/anon/.ssh/known_hosts:2
+  remove with:
+  ssh-keygen -f '/home/anon/.ssh/known_hosts' -R '192.168.2.2'
+Host key for 192.168.2.2 has changed and you have requested strict checking.
+Host key verification failed.
+
+
+Do this (this is a security feature to protect against MITM attack):
+ssh-keygen -f "/home/anon/.ssh/known_hosts" -R "192.168.2.2"
+
+OR manually:
+nano ~/.ssh/known_hosts
+Find the line that mentions 192.168.2.2 (it will look like a long string of random characters starting with 192.168.2.2).
+Delete that line and save the file (Ctrl+O, Enter, Ctrl+X).
+Try connecting again
+
+
+
+once confirmed can do (doesn't really work for me):
+sudo nano /etc/network/interfaces
+
+add the following:
+auto usb0
+iface usb0 inet static
+    address 192.168.2.1
+    netmask 255.255.255.0
+
+
+then:
+sudo systemctl restart networking
+
+
+
+For reconnecting (not always needed):
+1. ALWAYS DO:
+sudo ip addr add 192.168.2.1/24 dev usb0 (set mint IP)
+sudo ip link set usb0 up
+ssh pi@192.168.2.2
+
+sudo ip neigh flush all
+or sudo shutdown -F now (always try shutdown pi when wanting to power it or pc off)
+or sudo reboot
+
+
+Other methods (NetworkManager, newer Mint Version - doesnt work in my tests/is not needed even with newer Mint version with network manager):
+sudo nmcli con add type ethernet ifname usb0 ip4 192.168.2.1/24
+sudo nmcli con up "usb0"
+ip addr show usb0
+ssh pi@192.168.2.2
+
+
