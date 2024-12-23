@@ -1,0 +1,18 @@
+Firewall Issues:
+Check Firewall Rules
+
+    List the Firewall Rules:
+
+sudo ufw status
+
+Allow SSH Through the Firewall:
+
+sudo ufw allow ssh
+
+Reload the Firewall:
+
+sudo ufw reload
+
+Verify SSH is allowed:
+
+sudo ufw status
